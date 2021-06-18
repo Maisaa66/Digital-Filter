@@ -14,7 +14,7 @@ import cmath
 import numpy as np
 from numpy import pi, log10
 
-x_co = [0, 6.28]
+x_co = [0, 3.14]
 y_co = [0, 0]
 z, p, apf_z, apf_p, new_a, new_b, tf_b, tf_a = [], [], [], [], [], [], [], []
 
@@ -23,17 +23,17 @@ output_file('index.html')
 # plot the z-plane with the unit circle
 unit = figure(plot_width=350, plot_height=350,
               x_range=(-2, 2), y_range=(-2, 2), title="zplane")
-unit.circle(x=[0], y=[0], color="green", radius=1, alpha=0.1)
+unit.circle(x=[0], y=[0], color="green", radius=1, alpha=0.1, line_color="black")
 show(unit)
 
 # plot frequency response with two graphs(magnitude & phase)
-freqGraph = figure(x_range=(0, 6.28), y_range=(-10, 10), toolbar_location="right",
+freqGraph = figure(x_range=(0, 3.14), y_range=(-10, 10), toolbar_location="right",
                    title='Frequency response', plot_width=560, plot_height=350)
 
 show(freqGraph)
 
 # plot filter frequency response with two graphs(magnitude & phase)
-filterGraph = figure(x_range=(0, 6.28), y_range=(-10, 10), toolbar_location="right",
+filterGraph = figure(x_range=(0, 3.14), y_range=(-10, 10), toolbar_location="right",
                      title='All Pass Filter', plot_width=560, plot_height=350)
 show(filterGraph)
 
