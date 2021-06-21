@@ -24,10 +24,15 @@ output_file('index.html')
 ''' Initializations '''
 p_source = ColumnDataSource(data=dict(x_of_poles=[], y_of_poles=[]))
 z_source = ColumnDataSource(data=dict(x_of_zeros=[], y_of_zeros=[]))
+
+p_sourceFilter = ColumnDataSource(data=dict(x_of_polesFilter=[], y_of_polesFilter=[]))
+z_sourceFilter = ColumnDataSource(data=dict(x_of_zerosFilter=[], y_of_zerosFilter=[]))
+
 mag_source = ColumnDataSource({'h': [], 'w': []})
 phase_source = ColumnDataSource({'w': [], 'p': []})
-apf_source_1 = ColumnDataSource({'x': [], 'y': []})
-apf_source_2 = ColumnDataSource({'x': [], 'y': []})
+
+# apf_source_1 = ColumnDataSource({'x': [], 'y': []})
+# apf_source_2 = ColumnDataSource({'x': [], 'y': []})
 
 p_columns = [TableColumn(field="x_of_poles", title="x_of_poles"),
              TableColumn(field="y_of_poles", title="y_of_poles")]
@@ -35,28 +40,30 @@ z_columns = [TableColumn(field="x_of_zeros", title="x_of_zeros"),
              TableColumn(field="y_of_zeros", title="y_of_zeros")]
 
 # plot the z-plane with the unit circle
-unit = figure(plot_width=350, plot_height=350,
+unit = figure(plot_width=250, plot_height=250,
               x_range=(-2, 2), y_range=(-2, 2), title="zplane")
 unit.circle(x=[0], y=[0], color="green", radius=1,
             alpha=0.1, line_color="black")
 
 
 # plot the z-plane with the unit circle
-unit_filter = figure(plot_width=350, plot_height=350,
+unit_filter = figure(plot_width=250, plot_height=250,
               x_range=(-2, 2), y_range=(-2, 2), title="zplane")
 unit_filter.circle(x=[0], y=[0], color="green", radius=1,
             alpha=0.1, line_color="black")
 
 # plot frequency response with two graphs(magnitude & phase)
 freqGraph = figure(x_range=(0, 3.14), y_range=(-10, 10), toolbar_location="right",
-                   title='Frequency response', plot_width=560, plot_height=350)
+                   title='Frequency response', plot_width=600, plot_height=250)
 # plot filter frequency response with two graphs(magnitude & phase)
 filterGraph = figure(x_range=(0, 3.14), y_range=(-10, 10), toolbar_location="right",
-                     title='All Pass Filter', plot_width=560, plot_height=350)
+                     title='All Pass Filter', plot_width=600, plot_height=250)
 
 show(freqGraph)
 show(filterGraph)
 show(unit)
+show(unit_filter)
+
 # create dropmenu selections
 filterlist = [0]*21
 for i in range(21):
@@ -69,6 +76,12 @@ z_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
                           source=z_source, color='green', size=10)
 p_renderer = unit.star(x="x_of_poles", y="y_of_poles",
                        source=p_source, color='red', size=10)
+
+# drow zeros as circle, drow poles as asterisk for filter
+zFilter_renderer = unit_filter.scatter(x='x_of_zerosFilter', y='y_of_zerosFilter',
+                          source=z_sourceFilter, color='green', size=10)
+pFilter_renderer = unit_filter.star(x="x_of_polesFilter", y="y_of_polesFilter",
+                       source=p_sourceFilter, color='red', size=10)
 
 # table shows (x,y) for each zero, pole
 z_table = DataTable(source=z_source, columns=z_columns,
@@ -109,6 +122,7 @@ def MagAndPhase():
         mag_source.stream({'h': w, 'w': mag})
         phase_source.stream({'w': w, 'p': phase})
 
+
 # Plot phase and magnitude response with latest source values.
 freqGraph.line(x='h', y='w', source=mag_source,
             legend_label="Mag", line_color="red", name="magResponse")
@@ -119,6 +133,7 @@ freqGraph.line(x='w', y='p', source=phase_source,
 
 def update(attr, old, new):  # on click
     ZeorsAndPoles(1)
+
 
 # filterGraph.line(x='x', y='y', source=apf_source_1,
 #                  legend_label="Magnitude response", line_color="red")
@@ -212,7 +227,7 @@ def clear_all():
 
 
 def clear_zeros():
-    z_source.data['x_of_zeros'].clear()
+    z_sourceFilter.data['x_of_zeros'].clear()
     z_source.data['y_of_zeros'].clear()
     new_data_2 = {
         'x_of_zeros': z_source.data['x_of_zeros'], 'y_of_zeros': z_source.data['y_of_zeros'], }
@@ -239,19 +254,32 @@ ClearZ_button = Button(label="Clear Zeros", button_type="success", width=70)
 ClearAll_button.on_click(clear_all)
 ClearP_button.on_click(clear_poles)
 ClearZ_button.on_click(clear_zeros)
+
+
+addFilter_button = Button(label="Add Filter", button_type="success", width=70)
+clearFilter_button = Button(label="Delete Filter", button_type="success", width=70)
+# addFilter_button.on_click(addFilter)
+# clearFilter_button.on_click(deleteFilter)
 ######################################################################
 
 draw_tool = PointDrawTool(renderers=[p_renderer], empty_value='red')
 draw_tool_2 = PointDrawTool(renderers=[z_renderer], empty_value='green')
 
+draw_tool_filter = PointDrawTool(renderers=[pFilter_renderer], empty_value='red')
+draw_tool_filter2 = PointDrawTool(renderers=[zFilter_renderer], empty_value='green')
 
 unit.add_tools(draw_tool, draw_tool_2)
 unit.toolbar.active_tap = draw_tool
 unit.toolbar.logo = None
+unit_filter.add_tools(draw_tool_filter, draw_tool_filter2)
+unit_filter.toolbar.active_tap = draw_tool_filter
+unit_filter.toolbar.logo = None
 freqGraph.toolbar.logo = None
 filterGraph.toolbar.logo = None
-plot = Row(unit, freqGraph, filterGraph)
-plot2 = Row(p_table, z_table)
+plot = Row(unit, freqGraph)
+plot2 = Row(unit_filter, filterGraph)
+plot3 = Row(p_table, z_table)
 menu = Row(filterMenu)
 buttons = Row(toggle, ClearP_button, ClearZ_button, ClearAll_button)
-curdoc().add_root(column(plot, buttons, menu, plot2))
+filterButtons = Row(addFilter_button, clearFilter_button)
+curdoc().add_root(column(plot,buttons, plot2, filterButtons, menu, plot3))
