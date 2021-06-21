@@ -52,7 +52,7 @@
 
 4. Run the application
     ```sh
-    python app.py
+    python -m bokeh serve --show app.py
     ```
 
 5. View the application on localhost
