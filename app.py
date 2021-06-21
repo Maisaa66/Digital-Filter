@@ -383,7 +383,7 @@ imag_input = TextInput(value="", title="Enter imag part for your custom filter (
 text_widget = widgetbox(real_input, imag_input)
 show(text_widget)
 
-######################################################################
+#############################################
 
 draw_tool = PointDrawTool(renderers=[p_renderer], empty_value='red')
 draw_tool_2 = PointDrawTool(renderers=[z_renderer], empty_value='green')
