@@ -227,7 +227,7 @@ def clear_all():
 
 
 def clear_zeros():
-    z_sourceFilter.data['x_of_zeros'].clear()
+    z_source.data['x_of_zeros'].clear()
     z_source.data['y_of_zeros'].clear()
     new_data_2 = {
         'x_of_zeros': z_source.data['x_of_zeros'], 'y_of_zeros': z_source.data['y_of_zeros'], }
