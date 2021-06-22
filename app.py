@@ -81,24 +81,24 @@ z_columns = [TableColumn(field="x_of_zeros", title="x_of_zeros"),
              TableColumn(field="y_of_zeros", title="y_of_zeros")]
 
 # plot the z-plane with the unit circle
-unit = figure(plot_width=350, plot_height=350,
+unit = figure(plot_width=300, plot_height=300,
               x_range=(-2, 2), y_range=(-2, 2), title="zplane")
 unit.circle(x=[0], y=[0], color="green", radius=1,
             alpha=0.1, line_color="black")
 
 
 # plot the z-plane with the unit circle
-unit_filter = figure(plot_width=350, plot_height=350,
+unit_filter = figure(plot_width=300, plot_height=300,
                      x_range=(-2, 2), y_range=(-2, 2), title="APF zplane")
 unit_filter.circle(x=[0], y=[0], color="green", radius=1,
                    alpha=0.1, line_color="black")
 
 # plot frequency response with two graphs(magnitude & phase)
 freqGraph = figure(x_range=(0, 3.14), y_range=(-20, 20), toolbar_location="right",
-                   title='Frequency response', plot_width=600, plot_height=350)
+                   title='Frequency response', plot_width=600, plot_height=300)
 # plot filter frequency response with two graphs(magnitude & phase)
 filterGraph = figure(x_range=(0, 3.14), y_range=(-20, 20), toolbar_location="right",
-                     title='All Pass Filter', plot_width=600, plot_height=350)
+                     title='All Pass Filter', plot_width=600, plot_height=300)
 
 show(freqGraph)
 show(filterGraph)
@@ -108,7 +108,7 @@ show(unit_filter)
 # draw zeros as circle, drow poles as asterisk
 z_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
                           source=z_source, color='green', size=10)
-p_renderer = unit.star(x="x_of_poles", y="y_of_poles",
+p_renderer = unit.x(x="x_of_poles", y="y_of_poles",
                        source=p_source, color='red', size=10)
 
 # zConj_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
@@ -338,6 +338,9 @@ def clear_all():
     new_data_2 = {
         'x_of_zeros': z_source.data['x_of_zeros'], 'y_of_zeros': z_source.data['y_of_zeros'], }
     z_source.data = new_data_2
+    
+    mag_source.data = {k: [] for k in mag_source.data}
+    phase_source.data = {k: [] for k in phase_source.data}
 
 
 def clear_zeros():
