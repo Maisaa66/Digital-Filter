@@ -95,22 +95,26 @@ unit_filter.circle(x=[0], y=[0], color="green", radius=1,
 
 # plot frequency response with two graphs(magnitude & phase)
 freqGraph = figure(x_range=(0, 3.14), y_range=(-20, 20), toolbar_location="right",
-                   title='Frequency response', plot_width=600, plot_height=250)
+                   title='Frequency response', plot_width=600, plot_height=350)
 # plot filter frequency response with two graphs(magnitude & phase)
 filterGraph = figure(x_range=(0, 3.14), y_range=(-20, 20), toolbar_location="right",
-                     title='All Pass Filter', plot_width=600, plot_height=250)
+                     title='All Pass Filter', plot_width=600, plot_height=350)
 
 show(freqGraph)
 show(filterGraph)
 show(unit)
 show(unit_filter)
 
-# drow zeros as circle, drow poles as asterisk
+# draw zeros as circle, drow poles as asterisk
 z_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
                           source=z_source, color='green', size=10)
 p_renderer = unit.star(x="x_of_poles", y="y_of_poles",
                        source=p_source, color='red', size=10)
 
+# zConj_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
+#                           source=zConj_source, color='green', size=10)
+# pConj_renderer = unit.star(x="xConj_of_poles", y="yConj_of_poles",
+#                        source=pConj_source, color='red', size=10)
 # table shows (x,y) for each zero, pole
 z_table = DataTable(source=z_source, columns=z_columns,
                     editable=True, height=200)
@@ -136,22 +140,15 @@ def ZeorsAndPoles(a):
     MagAndPhase()
 
 
-def conjugates():
-    global Zero, Pole
-    
-    for i in range(len(p_source.data['x_of_poles'])):
-        # convert to complex form
-        Pole.append(p_source.data['x_of_poles'][i] +
-                    p_source.data['y_of_poles'][i]*-1j)
-    for i in range(len(z_source.data['x_of_zeros'])):
-        Zero.append(z_source.data['x_of_zeros'][i] +
-                    z_source.data['y_of_zeros'][i]*-1j)
-    print("zeros with conj: ", Zero)
-    print("poles with conj: ", Pole)
+def conjugates(): 
+    ZeorsAndPoles(-1)
+
+
     MagAndPhase()
 
 
 def MagAndPhase():
+    print(len(Zero), len(Pole))
     global tf_a, tf_b
     # Create keys in both dictionaries to store data
     # Values are cleared before each update
@@ -160,7 +157,6 @@ def MagAndPhase():
     if Zero or Pole:
 
         tf_b, tf_a = signal.zpk2tf(Zero, Pole, 1)
-
         w, h_response = signal.freqz(tf_b, tf_a)
 
         mag = 20*np.log10(abs(h_response))
@@ -169,10 +165,17 @@ def MagAndPhase():
         mag_source.stream({'h': w, 'w': mag})
         phase_source.stream({'w': w, 'p': phase})
 
+# Plot phase and magnitude response with latest source values.
+freqGraph.line(x='h', y='w', source=mag_source,
+               legend_label="Mag", line_color="red", name="magResponse")
+
+freqGraph.line(x='w', y='p', source=phase_source,
+               legend_label="Phase", color="blue", name="phaseResponse")
 
 def update(attr, old, new):  # on click
     ZeorsAndPoles(1)
     # conjugates()
+
 
 
 def filters_generator(attr, old, new):
@@ -321,12 +324,6 @@ p_source.on_change('data', update)
 z_source.on_change('data', update)
 
 
-# Plot phase and magnitude response with latest source values.
-freqGraph.line(x='h', y='w', source=mag_source,
-               legend_label="Mag", line_color="red", name="magResponse")
-
-freqGraph.line(x='w', y='p', source=phase_source,
-               legend_label="Phase", color="blue", name="phaseResponse")
 
 
 def clear_all():
@@ -400,7 +397,7 @@ plot = Row(unit, freqGraph)
 filter_plot = Row(unit_filter, filterGraph)
 tables = Row(p_table, z_table)
 
-menu = Row(filterMenu, text_widget)
+menu = Row(filterMenu, real_input, imag_input)
 buttons = Row(Conjugate_button, ClearP_button, ClearZ_button,  ClearAll_button)
 filters_buttons = Row(add_filter_button, apf_button)
-curdoc().add_root(column(plot, buttons, menu, filters_buttons, filter_plot, tables))
+curdoc().add_root(column(plot, buttons, menu, filter_plot,filters_buttons, tables))
