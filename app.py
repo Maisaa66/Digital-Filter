@@ -1,4 +1,3 @@
-from operator import index
 from bokeh.models import *
 from bokeh.plotting import *
 from bokeh.layouts import *
@@ -10,10 +9,9 @@ import random
 import decimal
 
 from scipy import signal
-import math
-import cmath
 import numpy as np
 from numpy import pi, log10
+
 np.seterr(divide='ignore', invalid='ignore')
 x_co = [0, 3.14]
 y_co = [0, 0]
@@ -63,22 +61,21 @@ p_sourceFilter = ColumnDataSource(
 z_sourceFilter = ColumnDataSource(
     data=dict(x_of_zerosFilter=[], y_of_zerosFilter=[]))
 
-mag_source = ColumnDataSource({'h': [], 'w': []})
-phase_source = ColumnDataSource({'w': [], 'p': []})
+mag_source = ColumnDataSource({'x': [], 'y': []})
+phase_source = ColumnDataSource({'x': [], 'y': []})
 apf_p_source = ColumnDataSource(data=dict(x_of_poles=[], y_of_poles=[]))
 apf_z_source = ColumnDataSource(data=dict(x_of_zeros=[], y_of_zeros=[]))
 apf_phase_source = ColumnDataSource({'w': [], 'p': []})
-
-
-filterMenu = Select()
-filterMenu.title = 'Filters'
-filterMenu.options = filterlist
-
 
 p_columns = [TableColumn(field="x_of_poles", title="x_of_poles"),
              TableColumn(field="y_of_poles", title="y_of_poles")]
 z_columns = [TableColumn(field="x_of_zeros", title="x_of_zeros"),
              TableColumn(field="y_of_zeros", title="y_of_zeros")]
+
+filterMenu = Select()
+filterMenu.title = 'Filters'
+filterMenu.options = filterlist
+
 
 # plot the z-plane with the unit circle
 unit = figure(plot_width=300, plot_height=300,
@@ -107,14 +104,15 @@ show(unit_filter)
 
 # draw zeros as circle, drow poles as asterisk
 z_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
-                          source=z_source, color='green', size=10)
+                          source=z_source, color='green', size=7)
 p_renderer = unit.x(x="x_of_poles", y="y_of_poles",
-                       source=p_source, color='red', size=10)
+                    source=p_source, color='red', size=10)
 
 # zConj_renderer = unit.scatter(x='x_of_zeros', y='y_of_zeros',
 #                           source=zConj_source, color='green', size=10)
 # pConj_renderer = unit.star(x="xConj_of_poles", y="yConj_of_poles",
 #                        source=pConj_source, color='red', size=10)
+
 # table shows (x,y) for each zero, pole
 z_table = DataTable(source=z_source, columns=z_columns,
                     editable=True, height=200)
@@ -126,7 +124,6 @@ p_table = DataTable(source=p_source, columns=p_columns,
 def ZeorsAndPoles(a):
     ''' Fetch zeros and poles from user'''
     global Zero, Pole
-    
 
     for i in range(len(p_source.data['x_of_poles'])):
         # convert to complex form
@@ -140,20 +137,19 @@ def ZeorsAndPoles(a):
     MagAndPhase()
 
 
-def conjugates(): 
+def conjugates():
     ZeorsAndPoles(-1)
-
 
     MagAndPhase()
 
 
 def MagAndPhase():
-    print(len(Zero), len(Pole))
+    # print(len(Zero), len(Pole))
     global tf_a, tf_b
     # Create keys in both dictionaries to store data
     # Values are cleared before each update
-    phase_source.data = {'w': [], 'p': []}
-    mag_source.data = {'h': [], 'w': []}
+    phase_source.data = {'x': [], 'y': []}
+    mag_source.data = {'x': [], 'y': []}
     if Zero or Pole:
 
         tf_b, tf_a = signal.zpk2tf(Zero, Pole, 1)
@@ -162,20 +158,21 @@ def MagAndPhase():
         mag = 20*np.log10(abs(h_response))
         phase = np.angle(h_response)
 
-        mag_source.stream({'h': w, 'w': mag})
-        phase_source.stream({'w': w, 'p': phase})
+        mag_source.stream({'y': mag, 'x': w})
+        phase_source.stream({'x': w, 'y': phase})
+
 
 # Plot phase and magnitude response with latest source values.
-freqGraph.line(x='h', y='w', source=mag_source,
+freqGraph.line(x='x', y='y', source=mag_source,
                legend_label="Mag", line_color="red", name="magResponse")
 
-freqGraph.line(x='w', y='p', source=phase_source,
+freqGraph.line(x='x', y='y', source=phase_source,
                legend_label="Phase", color="blue", name="phaseResponse")
+
 
 def update(attr, old, new):  # on click
     ZeorsAndPoles(1)
     # conjugates()
-
 
 
 def filters_generator(attr, old, new):
@@ -186,6 +183,7 @@ def filters_generator(attr, old, new):
     apf_z_source.data = dict(x_of_zeros=[], y_of_zeros=[])
 
     for i in range(len(filterMenu.options)):
+        # filterMenu.value -> current selection
         if filterMenu.value == f"Filter {i}":
             print(f"user selected Filter {i}")
             # Fetch current value of a
@@ -211,7 +209,7 @@ def filters_generator(attr, old, new):
 
             unit_filter.scatter(x='x_of_zeros', y='y_of_zeros',
                                 source=apf_z_source, color='green', size=10)
-            unit_filter.star(x="x_of_poles", y="y_of_poles",
+            unit_filter.x(x="x_of_poles", y="y_of_poles",
                              source=apf_p_source, color='red', size=10)
             # get frequency response of H(apf)
             w, h = signal.freqz_zpk(z, p, k)
@@ -236,8 +234,8 @@ temp_den = []
 def add_apf():
     global temp_num, temp_den
 
-    phase_source.data = {'w': [], 'p': []}
-    mag_source.data = {'h': [], 'w': []}
+    phase_source.data = {'x': [], 'y': []}
+    mag_source.data = {'x': [], 'y': []}
     selected_filter = filterMenu.value  # string
 
     if selected_filter != "None":
@@ -267,14 +265,14 @@ def add_apf():
     mag = 20*np.log10(abs(h))
     phase = np.angle(h)
 
-    mag_source.stream({'h': w, 'w': mag})
-    phase_source.stream({'w': w, 'p': phase})
+    mag_source.stream({'x': w, 'y': mag})
+    phase_source.stream({'x': w, 'y': phase})
 
     if selected_filter == "None":
         ''' plot original response without APF addition '''
         # clear data
-        phase_source.data = {'w': [], 'p': []}
-        mag_source.data = {'h': [], 'w': []}
+        phase_source.data = {'x': [], 'y': []}
+        mag_source.data = {'x': [], 'y': []}
 
         # get original freq response without APFs
         w, h_original = signal.freqz(tf_b, tf_a)
@@ -282,8 +280,8 @@ def add_apf():
         mag = 20*np.log10(abs(h_original))
         phase = np.angle(h_original)
         # plot
-        mag_source.stream({'h': w, 'w': mag})
-        phase_source.stream({'w': w, 'p': phase})
+        mag_source.stream({'x': w, 'y': mag})
+        phase_source.stream({'x': w, 'y': phase})
 
 
 # plot zeros,poles and phase response of each selected item from dropdown menu.
@@ -296,9 +294,9 @@ filterGraph.line(x='w', y='p', source=apf_phase_source,
 def custom_apf_generator(a):
     real = real_input.value
     imag = imag_input.value
-    a = float(real) + float(imag) *1j
+    a = float(real) + float(imag) * 1j
     print("user added: ", a)
-    
+
     ''' A button will send a value of a (complex number) here, construct a filter using this value, add it to library, and plot it.
         Parameters: a , type(complex)
         Returns: added filter in filtersList
@@ -324,8 +322,6 @@ p_source.on_change('data', update)
 z_source.on_change('data', update)
 
 
-
-
 def clear_all():
     p_source.data['x_of_poles'].clear()
     p_source.data['y_of_poles'].clear()
@@ -338,12 +334,13 @@ def clear_all():
     new_data_2 = {
         'x_of_zeros': z_source.data['x_of_zeros'], 'y_of_zeros': z_source.data['y_of_zeros'], }
     z_source.data = new_data_2
-    
+
     mag_source.data = {k: [] for k in mag_source.data}
     phase_source.data = {k: [] for k in phase_source.data}
 
 
 def clear_zeros():
+    
     z_source.data['x_of_zeros'].clear()
     z_source.data['y_of_zeros'].clear()
     new_data_2 = {
@@ -361,7 +358,8 @@ def clear_poles():
 
 apf_button = Button(label="Add APF", button_type="success", width=90)
 Conjugate_button = Button(label="Conjugate", button_type="success", width=90)
-add_filter_button = Button(label="Add Custom Filter", button_type="success", width=150)
+add_filter_button = Button(label="Add Custom Filter",
+                           button_type="success", width=150)
 ClearAll_button = Button(label="Clear All", button_type="success", width=90)
 ClearP_button = Button(label="Clear Poles", button_type="success", width=90)
 ClearZ_button = Button(label="Clear Zeros", button_type="success", width=90)
@@ -377,8 +375,10 @@ callback = CustomJS(args={}, code='alert("Added new custom filter! ");')
 add_filter_button.js_on_click(callback)
 ##########
 
-real_input = TextInput(value="", title="Enter real part for your custom filter:",placeholder="ex: 0.5" )
-imag_input = TextInput(value="", title="Enter imag part for your custom filter (WITHOUT the letter j):",placeholder="ex: 0.2j" )
+real_input = TextInput(
+    value="", title="Enter real part of (a):", placeholder="ex: 0.5")
+imag_input = TextInput(
+    value="", title="Enter imag part of (a) (WITHOUT 'j'):", placeholder="ex: 0.2")
 
 text_widget = widgetbox(real_input, imag_input)
 show(text_widget)
@@ -403,4 +403,4 @@ tables = Row(p_table, z_table)
 menu = Row(filterMenu, real_input, imag_input)
 buttons = Row(Conjugate_button, ClearP_button, ClearZ_button,  ClearAll_button)
 filters_buttons = Row(add_filter_button, apf_button)
-curdoc().add_root(column(plot, buttons, menu, filter_plot,filters_buttons, tables))
+curdoc().add_root(column(plot, buttons, menu, filter_plot, filters_buttons, tables))
